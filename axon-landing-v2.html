@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axon™ — AI Dev Launchpad</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060608;--bg2:#0d0d10;--bg3:#13131a;
+  --b:rgba(255,255,255,.06);--bh:rgba(255,255,255,.12);
+  --t:#f0f0f0;--m:#666;--d:#2a2a2a;
+  --accent:#a78bfa;--accent2:#38bdf8;
+  --mono:'DM Mono',monospace;
+  --serif:'Instrument Serif',serif;
+  --sans:'Plus Jakarta Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;cursor:none}
+
+/* Custom cursor */
+#cursor{position:fixed;width:8px;height:8px;background:var(--t);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:difference}
+#cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(255,255,255,.25);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .12s ease,width .3s,height .3s,border-color .3s}
+body:hover #cursor{opacity:1}
+
+/* Canvas bg */
+#bg-canvas{position:fixed;inset:0;z-index:0;opacity:.5}
+
+/* Noise overlay */
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.03;pointer-events:none;z-index:1}
+
+/* All content above canvas */
+header,main,footer,.overlay-el{position:relative;z-index:2}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 2.5rem;border-bottom:1px solid var(--b);position:fixed;top:0;left:0;right:0;background:rgba(6,6,8,.7);backdrop-filter:blur(20px);z-index:100}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--t)}
+.logo-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(167,139,250,.3)}
+.logo-mark svg{width:16px;height:16px}
+.logo-name{font-family:var(--mono);font-size:14px;letter-spacing:-.02em}
+.beta-pill{font-family:var(--mono);font-size:11px;color:var(--m);background:var(--bg2);border:1px solid var(--b);padding:3px 12px;border-radius:99px}
+nav{display:flex;align-items:center;gap:1.75rem}
+nav a{color:var(--m);text-decoration:none;font-size:13px;font-family:var(--mono);transition:color .2s;letter-spacing:.02em}
+nav a:hover{color:var(--t)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 22px;border:1px solid var(--bh);border-radius:99px;font-size:13px;font-family:var(--mono);cursor:none;text-decoration:none;color:var(--t);background:transparent;transition:all .25s;letter-spacing:.02em}
+.btn:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2)}
+.btn-glow{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;box-shadow:0 0 30px rgba(167,139,250,.35),0 0 60px rgba(56,189,248,.15)}
+.btn-glow:hover{transform:scale(1.03);box-shadow:0 0 40px rgba(167,139,250,.5),0 0 80px rgba(56,189,248,.2);background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 5rem;position:relative}
+.hero-badge{font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);padding:5px 14px;border-radius:99px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2rem;display:inline-block}
+.hero h1{font-family:var(--serif);font-size:clamp(3.5rem,8vw,7rem);line-height:.96;letter-spacing:-.02em;margin-bottom:1.75rem;max-width:900px}
+.hero h1 .line{display:block;overflow:hidden}
+.hero h1 .line span{display:block;transform:translateY(110%);animation:slideUp .9s cubic-bezier(.16,1,.3,1) forwards}
+.hero h1 .line:nth-child(1) span{animation-delay:.05s}
+.hero h1 .line:nth-child(2) span{animation-delay:.18s}
+.hero h1 .line:nth-child(3) span{animation-delay:.31s}
+.hero h1 em{font-style:italic;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:17px;color:var(--m);max-width:460px;line-height:1.7;margin-bottom:2.75rem;opacity:0;animation:fadeIn .8s .6s ease forwards}
+.hero-ctas{display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;opacity:0;animation:fadeIn .8s .75s ease forwards}
+.scroll-hint{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeIn 1s 1.2s ease forwards}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,rgba(255,255,255,.2),transparent);position:relative;overflow:hidden}
+.scroll-line::after{content:'';position:absolute;top:-100%;left:0;right:0;height:100%;background:linear-gradient(to bottom,transparent,var(--accent),transparent);animation:scrollDrop 2s 1.5s ease-in-out infinite}
+@keyframes scrollDrop{0%{top:-100%}100%{top:200%}}
+.scroll-label{font-family:var(--mono);font-size:10px;color:var(--d);letter-spacing:.1em;text-transform:uppercase}
+
+/* Floating tags around hero */
+.float-tag{position:absolute;font-family:var(--mono);font-size:11px;color:var(--m);background:var(--bg2);border:1px solid var(--b);padding:6px 12px;border-radius:8px;white-space:nowrap;opacity:0;animation:fadeIn .6s ease forwards}
+.ft1{top:25%;left:5%;animation-delay:.8s;animation-name:floatTag1}
+.ft2{top:30%;right:5%;animation-delay:1s;animation-name:floatTag2}
+.ft3{bottom:25%;left:8%;animation-delay:1.2s;animation-name:floatTag1}
+.ft4{bottom:30%;right:8%;animation-delay:1.4s;animation-name:floatTag2}
+@keyframes floatTag1{0%{opacity:0;transform:translateX(-20px)}100%{opacity:1;transform:translateX(0)}}
+@keyframes floatTag2{0%{opacity:0;transform:translateX(20px)}100%{opacity:1;transform:translateX(0)}}
+.ft-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:7px;animation:pulseDot 2s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(167,139,250,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(167,139,250,0)}}
+
+/* Stats strip */
+.stats{border-top:1px solid var(--b);border-bottom:1px solid var(--b);display:flex;overflow:hidden;position:relative}
+.stats-track{display:flex;gap:0;animation:marquee 22s linear infinite;white-space:nowrap}
+.stats-track:hover{animation-play-state:paused}
+.stat-item{display:flex;align-items:center;gap:.5rem;padding:1rem 3rem;border-right:1px solid var(--b);font-family:var(--mono);font-size:12px;color:var(--m);flex-shrink:0}
+.stat-item strong{color:var(--t);font-weight:400}
+@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* Sections */
+main{padding-top:80px}
+.section{padding:7rem 2.5rem;max-width:1100px;margin:0 auto}
+.s-label{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--d);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.s-label::before{content:'';width:20px;height:1px;background:var(--d)}
+.s-h{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.8rem);line-height:1.05;letter-spacing:-.02em}
+.s-h em{font-style:italic;color:var(--m)}
+
+/* Bento grid */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;margin-top:3rem}
+.bento-card{background:var(--bg2);border:1px solid var(--b);border-radius:20px;padding:2rem;overflow:hidden;position:relative;transition:border-color .3s,transform .3s}
+.bento-card:hover{border-color:var(--bh);transform:translateY(-3px)}
+.bento-card::before{content:'';position:absolute;inset:0;background:radial-gradient(600px circle at var(--mx,50%) var(--my,50%),rgba(167,139,250,.04),transparent 40%);pointer-events:none;transition:opacity .3s}
+.bc1{grid-column:span 7}
+.bc2{grid-column:span 5}
+.bc3{grid-column:span 4}
+.bc4{grid-column:span 4}
+.bc5{grid-column:span 4}
+.bc6{grid-column:span 12;display:grid;grid-template-columns:1fr 1fr;gap:0}
+.bento-icon{width:40px;height:40px;border-radius:12px;border:1px solid var(--b);display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;background:var(--bg3)}
+.bento-icon svg{width:20px;height:20px;stroke:var(--m);fill:none;stroke-width:1.4}
+.bento-card h3{font-size:16px;font-weight:500;margin-bottom:.5rem;letter-spacing:-.02em}
+.bento-card p{font-size:13px;color:var(--m);line-height:1.65}
+.big-number{font-family:var(--serif);font-style:italic;font-size:5rem;line-height:1;color:rgba(255,255,255,.07);position:absolute;bottom:.5rem;right:1.5rem;pointer-events:none;user-select:none}
+.bento-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--accent);background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.15);padding:3px 10px;border-radius:99px;margin-bottom:1rem}
+
+/* Terminal */
+.term-wrap{background:var(--bg2);border:1px solid var(--b);border-radius:20px;overflow:hidden;margin-top:3rem;position:relative}
+.term-glow{position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:300px;height:120px;background:radial-gradient(ellipse,rgba(167,139,250,.15),transparent 70%);pointer-events:none}
+.term-bar{padding:14px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px}
+.td{width:11px;height:11px;border-radius:50%}
+.td1{background:#ff5f57}.td2{background:#febc2e}.td3{background:#28c840}
+.term-title{font-family:var(--mono);font-size:12px;color:var(--m);margin:0 auto}
+.term-body{padding:2rem 2.5rem;font-family:var(--mono);font-size:13px;line-height:2.2}
+.tl{display:flex;gap:.75rem;align-items:flex-start}
+.tp{color:var(--accent);user-select:none}
+.tc{color:var(--t)}
+.to{padding-left:1.75rem;color:var(--m)}
+.tg{color:#4ade80}
+.ta{color:var(--accent2)}
+.tdm{color:var(--d)}
+.cursor-blink{display:inline-block;width:7px;height:14px;background:var(--accent);margin-left:3px;animation:blink .9s step-end infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* FAQ iMessage */
+.faq-container{max-width:660px;margin:3.5rem auto 0;display:flex;flex-direction:column;gap:2rem}
+.faq-item{opacity:0;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease}
+.faq-item.visible{opacity:1;transform:translateY(0)}
+.faq-q{display:flex;justify-content:flex-end;margin-bottom:8px}
+.faq-qb{background:#1e1e28;border:1px solid rgba(167,139,250,.15);border-radius:18px 18px 5px 18px;padding:11px 18px;font-size:14px;max-width:72%;color:rgba(255,255,255,.6);line-height:1.5}
+.faq-a{display:flex;align-items:flex-start;gap:10px}
+.faq-av{width:30px;height:30px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:#fff;margin-top:18px;box-shadow:0 0 12px rgba(167,139,250,.3)}
+.faq-meta{font-family:var(--mono);font-size:11px;color:var(--d);margin-bottom:5px}
+.faq-ab{background:#13131a;border:1px solid var(--b);border-radius:5px 18px 18px 18px;padding:11px 18px;font-size:14px;max-width:72%;color:var(--m);line-height:1.65}
+
+/* Pricing */
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin-top:3.5rem}
+.pcard{background:var(--bg2);border:1px solid var(--b);border-radius:22px;padding:2.25rem 1.75rem;position:relative;overflow:hidden;transition:transform .3s,border-color .3s}
+.pcard:hover{transform:translateY(-4px);border-color:var(--bh)}
+.pcard.featured{border-color:rgba(167,139,250,.25);background:linear-gradient(135deg,rgba(167,139,250,.04),rgba(56,189,248,.02))}
+.pcard-glow{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:160px;height:80px;background:radial-gradient(ellipse,rgba(167,139,250,.2),transparent 70%);pointer-events:none}
+.pbadge{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:4px 11px;border-radius:99px;background:rgba(255,255,255,.05);color:var(--m);margin-bottom:1.5rem;border:1px solid var(--b)}
+.pbadge-hot{background:rgba(167,139,250,.1);color:var(--accent);border-color:rgba(167,139,250,.2)}
+.pcard h3{font-size:13px;font-weight:400;color:var(--m);font-family:var(--mono);margin-bottom:.6rem}
+.pamount{font-family:var(--serif);font-size:3.2rem;line-height:1;letter-spacing:-.02em;margin-bottom:.2rem}
+.pperiod{font-family:var(--mono);font-size:12px;color:var(--d);margin-bottom:2rem}
+.pfeats{list-style:none;display:flex;flex-direction:column;gap:.6rem;margin-bottom:2rem}
+.pfeats li{font-size:13px;color:var(--m);display:flex;align-items:center;gap:10px}
+.pfeats li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--d);flex-shrink:0}
+
+/* Roadmap */
+.roadmap{display:flex;flex-direction:column;position:relative;max-width:580px;margin-top:3rem}
+.roadmap::before{content:'';position:absolute;left:11px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--b),rgba(167,139,250,.2),var(--b))}
+.ri{display:flex;gap:1.75rem;padding:1.5rem 0}
+.rdot{width:23px;height:23px;border-radius:50%;border:1px solid var(--b);background:var(--bg);flex-shrink:0;position:relative}
+.rdot.done{background:var(--t)}
+.rdot.done::after{content:'';position:absolute;inset:6px;border-radius:50%;background:#000}
+.rdot.now{border-color:rgba(167,139,250,.4)}
+.rdot.now::after{content:'';position:absolute;inset:5px;border-radius:50%;background:var(--accent);animation:gPulse 2s ease-in-out infinite}
+@keyframes gPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(167,139,250,.5)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(167,139,250,0)}}
+.rdate{font-family:var(--mono);font-size:11px;color:var(--d);margin-bottom:4px}
+.rtitle{font-size:15px;font-weight:500;margin-bottom:4px;letter-spacing:-.01em}
+.rdesc{font-size:13px;color:var(--m)}
+.rnow-badge{display:inline-block;font-family:var(--mono);font-size:10px;color:var(--accent);background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);padding:2px 9px;border-radius:99px;margin-left:8px;vertical-align:middle}
+
+/* CTA */
+.cta{text-align:center;padding:8rem 2rem;position:relative;overflow:hidden}
+.cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(167,139,250,.12) 0%,rgba(56,189,248,.06) 40%,transparent 70%);pointer-events:none}
+.cta h2{font-family:var(--serif);font-size:clamp(2.8rem,6vw,5rem);line-height:1.02;letter-spacing:-.025em;margin-bottom:.75rem;position:relative}
+.cta h2 em{font-style:italic;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cta p{color:var(--m);margin-bottom:2.5rem;font-size:16px;position:relative}
+.waitlist{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;position:relative}
+.wi{background:rgba(255,255,255,.04);border:1px solid var(--bh);border-radius:99px;padding:12px 24px;font-size:14px;font-family:var(--mono);color:var(--t);outline:none;width:280px;transition:border-color .25s,box-shadow .25s}
+.wi:focus{border-color:rgba(167,139,250,.4);box-shadow:0 0 0 3px rgba(167,139,250,.08)}
+.wi::placeholder{color:var(--d)}
+
+/* Footer */
+footer{border-top:1px solid var(--b);padding:2.5rem 2.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;max-width:1100px;margin:0 auto}
+.fl{font-family:var(--mono);font-size:13px;color:var(--m)}
+.fsub{font-family:var(--mono);font-size:11px;color:var(--d);margin-top:4px}
+.flinks{display:flex;gap:1.75rem}
+.flinks a{font-family:var(--mono);font-size:12px;color:var(--d);text-decoration:none;transition:color .2s}
+.flinks a:hover{color:var(--m)}
+
+/* Reveal on scroll */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:translateY(0)}
+.reveal-l{opacity:0;transform:translateX(-30px);transition:opacity .7s ease,transform .7s ease}
+.reveal-l.in{opacity:1;transform:translateX(0)}
+.reveal-r{opacity:0;transform:translateX(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal-r.in{opacity:1;transform:translateX(0)}
+
+/* Hover glow cards */
+.bento-card,.pcard{--mx:50%;--my:50%}
+
+/* Divider */
+.hr{height:1px;background:var(--b);max-width:1100px;margin:0 auto}
+
+@keyframes slideUp{0%{transform:translateY(110%)}100%{transform:translateY(0)}}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+
+/* Float animations for tags */
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.float-tag{animation:floatY 4s ease-in-out infinite!important}
+.ft2,.ft4{animation-delay:2s!important}
+</style>
+</head>
+<body>
+
+<style>
+.watermark{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9997;
+  overflow:hidden;
+}
+.watermark-inner{
+  position:absolute;
+  inset:-50%;
+  display:flex;
+  flex-wrap:wrap;
+  align-content:flex-start;
+  gap:5rem 4rem;
+  transform:rotate(-35deg);
+  opacity:0;
+  animation:wmFadeIn 2s 1s ease forwards;
+}
+@keyframes wmFadeIn{to{opacity:1}}
+.wm-text{
+  font-family:'DM Mono',monospace;
+  font-size:15px;
+  font-weight:400;
+  letter-spacing:.25em;
+  text-transform:lowercase;
+  color:rgba(167,139,250,.07);
+  white-space:nowrap;
+  user-select:none;
+  -webkit-user-select:none;
+}
+</style>
+
+<div class="watermark">
+  <div class="watermark-inner" id="wm"></div>
+</div>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="bg-canvas"></canvas>
+
+<header>
+  <a href="#" class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="8" r="2.5" fill="white"/>
+        <path d="M8 1.5v2.5M8 12v2.5M1.5 8h2.5M12 8h2.5" stroke="white" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="logo-name">Axon™</span>
+  </a>
+  <span class="beta-pill">Beta — May 2026</span>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#faq">FAQ</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#waitlist" class="btn">Join Waitlist</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="float-tag ft1"><span class="ft-dot"></span>Agent #1 — writing middleware</div>
+  <div class="float-tag ft2"><span class="ft-dot"></span>Deployed → cdn.axon.dev</div>
+  <div class="float-tag ft3"><span class="ft-dot"></span>3 models orchestrated</div>
+  <div class="float-tag ft4"><span class="ft-dot"></span>Build: 2.1s ✓</div>
+
+  <div class="hero-badge">AI Development Launchpad</div>
+  <h1>
+    <span class="line"><span>Build faster</span></span>
+    <span class="line"><span>with <em>intelligent</em></span></span>
+    <span class="line"><span><em>agents.</em></span></span>
+  </h1>
+  <p class="hero-sub">Multiple AI agents working on your codebase in parallel — from architecture to deployment, in one unified workspace.</p>
+  <div class="hero-ctas">
+    <a href="#waitlist" class="btn btn-glow">Join Waitlist →</a>
+    <a href="#features" class="btn">See Features</a>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span class="scroll-label">Scroll</span>
+  </div>
+</section>
+
+<!-- STATS MARQUEE -->
+<div class="stats">
+  <div class="stats-track" id="track">
+    <div class="stat-item"><strong>12-step</strong>&nbsp;setup</div>
+    <div class="stat-item"><strong>3 AI models</strong>&nbsp;auto-routed</div>
+    <div class="stat-item"><strong>One-click</strong>&nbsp;deploy</div>
+    <div class="stat-item"><strong>200</strong>&nbsp;founder spots</div>
+    <div class="stat-item"><strong>Bun-powered</strong>&nbsp;dev server</div>
+    <div class="stat-item"><strong>Instant</strong>&nbsp;rollback</div>
+    <div class="stat-item"><strong>Cloudflare</strong>&nbsp;CDN</div>
+    <div class="stat-item"><strong>MCP</strong>&nbsp;integration</div>
+    <div class="stat-item"><strong>12-step</strong>&nbsp;setup</div>
+    <div class="stat-item"><strong>3 AI models</strong>&nbsp;auto-routed</div>
+    <div class="stat-item"><strong>One-click</strong>&nbsp;deploy</div>
+    <div class="stat-item"><strong>200</strong>&nbsp;founder spots</div>
+    <div class="stat-item"><strong>Bun-powered</strong>&nbsp;dev server</div>
+    <div class="stat-item"><strong>Instant</strong>&nbsp;rollback</div>
+    <div class="stat-item"><strong>Cloudflare</strong>&nbsp;CDN</div>
+    <div class="stat-item"><strong>MCP</strong>&nbsp;integration</div>
+  </div>
+</div>
+
+<!-- FEATURES BENTO -->
+<section class="section" id="features">
+  <div class="s-label reveal">What it does</div>
+  <h2 class="s-h reveal">Complete<br><em>Agentic Control.</em></h2>
+  <div class="bento">
+
+    <div class="bento-card bc1 reveal-l">
+      <div class="bento-tag">Core Feature</div>
+      <div class="bento-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <h3>Multi-Agent Mode</h3>
+      <p>Run multiple agents in parallel — one writes code, another runs tests, another refactors. All in sync, no merge conflicts, no waiting.</p>
+      <div class="big-number">01</div>
+    </div>
+
+    <div class="bento-card bc2 reveal-r">
+      <div class="bento-icon"><svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      <h3>Live Dev Server</h3>
+      <p>Bun-powered hot module reload. See changes instantly, no tab switching.</p>
+      <div class="big-number">02</div>
+    </div>
+
+    <div class="bento-card bc3 reveal">
+      <div class="bento-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+      <h3>Embedded Knowledge</h3>
+      <p>TypeScript, React, WebGL, GSAP — pre-loaded, always contextual.</p>
+      <div class="big-number">03</div>
+    </div>
+
+    <div class="bento-card bc4 reveal">
+      <div class="bento-icon"><svg viewBox="0 0 24 24"><path d="M7 16.5l-5-3 5-3m10 0l5 3-5 3M14 4l-4 16"/></svg></div>
+      <h3>One-Click Deploy</h3>
+      <p>Build, minify, push to CDN. Instant rollback if anything breaks.</p>
+      <div class="big-number">04</div>
+    </div>
+
+    <div class="bento-card bc5 reveal">
+      <div class="bento-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg></div>
+      <h3>All Major Models</h3>
+      <p>GPT-4o, Claude, Gemini — auto-orchestrated per task, or pin your own.</p>
+      <div class="big-number">05</div>
+    </div>
+
+    <div class="bento-card reveal" style="grid-column:span 7">
+      <div class="bento-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <h3>Full Project Context via MCP</h3>
+      <p>Agents see your entire project — file tree, types, dependencies, git history. No repetition, no hallucinations, no need to explain yourself twice.</p>
+      <div class="big-number">06</div>
+    </div>
+
+    <div class="bento-card reveal" style="grid-column:span 5;display:flex;align-items:center;justify-content:center;text-align:center">
+      <div>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--d);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem">Founder spots remaining</p>
+        <p style="font-family:var(--serif);font-style:italic;font-size:4rem;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1" id="spots-counter">187</p>
+        <p style="font-family:var(--mono);font-size:12px;color:var(--d);margin-top:.25rem">of 200 max</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- TERMINAL -->
+<section class="section" id="how" style="padding-top:0">
+  <div class="s-label reveal">How it works</div>
+  <h2 class="s-h reveal">Connect. Prompt.<br><em>Ship.</em></h2>
+  <div class="term-wrap reveal">
+    <div class="term-glow"></div>
+    <div class="term-bar">
+      <div class="td td1"></div><div class="td td2"></div><div class="td td3"></div>
+      <span class="term-title">axon — bash — 80×24</span>
+    </div>
+    <div class="term-body">
+      <div class="tl"><span class="tp">❯</span><span class="tc" id="typed1"></span></div>
+      <div id="output1" style="display:none">
+        <div class="to tg">✓ Project initialized</div>
+        <div class="to tdm">→ Connecting to AI orchestrator...</div>
+        <div class="to ta">→ Loading project context via MCP</div>
+        <div class="to tg">✓ 3 Agents ready — parallel mode on</div>
+      </div>
+      <br>
+      <div class="tl"><span class="tp">❯</span><span class="tc" id="typed2"></span></div>
+      <div id="output2" style="display:none">
+        <div class="to tdm">→ Agent #1 &nbsp;Scaffolding auth middleware</div>
+        <div class="to tdm">→ Agent #2 &nbsp;Writing test suite (12 tests)</div>
+        <div class="to tdm">→ Agent #3 &nbsp;Updating type definitions</div>
+        <div class="to tg">✓ Done in 4.2s — 3 files modified, 0 errors</div>
+      </div>
+      <br>
+      <div class="tl"><span class="tp">❯</span><span class="tc" id="typed3"></span><span class="cursor-blink" id="term-cursor"></span></div>
+      <div id="output3" style="display:none">
+        <div class="to tdm">→ Building... minifying... pushing to CDN</div>
+        <div class="to tg">✓ Live → <span class="ta">cdn.axon.dev/my-project@v1.4</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" style="padding-top:0">
+  <div class="s-label reveal" style="justify-content:center">Questions</div>
+  <h2 class="s-h reveal" style="text-align:center">Frequently<br><em>Asked.</em></h2>
+  <div class="faq-container">
+
+    <div class="faq-item">
+      <div class="faq-q"><div class="faq-qb">Does it impact performance?</div></div>
+      <div class="faq-a">
+        <div class="faq-av">A</div>
+        <div><p class="faq-meta">Axon</p><div class="faq-ab">Only what it ships. Everything is bundled, minified, and tree-shaken — no overhead beyond the code you actually use.</div></div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><div class="faq-qb">Where does my code get hosted?</div></div>
+      <div class="faq-a">
+        <div class="faq-av">A</div>
+        <div><p class="faq-meta">Axon</p><div class="faq-ab">Files go to Cloudflare R2, served from cdn.axon.dev — dedicated CDN with global edge coverage and zero cold starts.</div></div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><div class="faq-qb">What if I deploy something wrong?</div></div>
+      <div class="faq-a">
+        <div class="faq-av">A</div>
+        <div><p class="faq-meta">Axon</p><div class="faq-ab">Hit rollback. Previous version is live in seconds. Fix locally, redeploy when ready — no drama, no downtime.</div></div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><div class="faq-qb">How do agents stay in sync?</div></div>
+      <div class="faq-a">
+        <div class="faq-av">A</div>
+        <div><p class="faq-meta">Axon</p><div class="faq-ab">Shared project context via MCP. Each agent sees the same file tree, types, and build state — no conflicts, no drift, no duplicate work.</div></div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q"><div class="faq-qb">Which AI models are available?</div></div>
+      <div class="faq-a">
+        <div class="faq-av">A</div>
+        <div><p class="faq-meta">Axon</p><div class="faq-ab">GPT-4o, Claude Sonnet, Gemini Pro. The orchestrator picks automatically, or you can pin any model per task from a toggle.</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing" style="padding-top:0">
+  <div class="s-label reveal">Pricing</div>
+  <h2 class="s-h reveal">Get Code<br><em>to Production.</em></h2>
+  <p class="reveal" style="color:var(--m);margin-top:.5rem;font-size:14px">Included usage in every plan. Token-based overages.</p>
+  <div class="price-grid">
+
+    <div class="pcard reveal">
+      <span class="pbadge">Beta</span>
+      <h3>Beta</h3>
+      <div class="pamount">Free</div>
+      <div class="pperiod">1 Month</div>
+      <ul class="pfeats">
+        <li>3 Projects</li>
+        <li>10,000 Credits</li>
+        <li>Fast models only</li>
+        <li>Community support</li>
+      </ul>
+      <a href="#waitlist" class="btn" style="width:100%">Apply for Beta</a>
+    </div>
+
+    <div class="pcard featured reveal">
+      <div class="pcard-glow"></div>
+      <span class="pbadge pbadge-hot">50% off — 200 spots max</span>
+      <h3>Founder</h3>
+      <div class="pamount" style="background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">€290</div>
+      <div class="pperiod">/ yearly — locked forever</div>
+      <ul class="pfeats">
+        <li>Unlimited Projects</li>
+        <li>40,000 Credits / month</li>
+        <li>All models + full reasoning</li>
+        <li>Priority support</li>
+        <li>Price locked — no surprises</li>
+      </ul>
+      <a href="#waitlist" class="btn btn-glow" style="width:100%">Get Founder Now</a>
+    </div>
+
+    <div class="pcard reveal">
+      <span class="pbadge">Standard</span>
+      <h3>Basic</h3>
+      <div class="pamount">€20</div>
+      <div class="pperiod">/ month</div>
+      <ul class="pfeats">
+        <li>10 Projects</li>
+        <li>12,000 Credits / month</li>
+        <li>Fast models</li>
+        <li>Email support</li>
+      </ul>
+      <a href="#" class="btn" style="width:100%;opacity:.35;pointer-events:none">Coming May 2026</a>
+    </div>
+
+    <div class="pcard reveal">
+      <span class="pbadge">Pro</span>
+      <h3>Advanced</h3>
+      <div class="pamount">€50</div>
+      <div class="pperiod">/ month</div>
+      <ul class="pfeats">
+        <li>Unlimited Projects</li>
+        <li>40,000 Credits / month</li>
+        <li>All models + reasoning</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#" class="btn" style="width:100%;opacity:.35;pointer-events:none">Coming May 2026</a>
+    </div>
+
+  </div>
+  <p style="font-size:12px;color:var(--d);text-align:center;margin-top:1.5rem;font-family:var(--mono)">(*) Pricing may shift during beta. Founder prices are locked forever.</p>
+</section>
+
+<!-- ROADMAP -->
+<section class="section" style="padding-top:0">
+  <div class="s-label reveal">Roadmap</div>
+  <h2 class="s-h reveal">What's<br><em>Coming.</em></h2>
+  <div class="roadmap reveal">
+    <div class="ri">
+      <div class="rdot done"></div>
+      <div><p class="rdate">March 2026</p><p class="rtitle">Closed Alpha</p><p class="rdesc">Core agent system, MCP integration, basic deploy pipeline — tested with 20 developers.</p></div>
+    </div>
+    <div class="ri">
+      <div class="rdot now"></div>
+      <div><p class="rdate">April 2026<span class="rnow-badge">Now</span></p><p class="rtitle">Founder Beta</p><p class="rdesc">Multi-agent mode, all models live, advanced deploy controls and rollback.</p></div>
+    </div>
+    <div class="ri">
+      <div class="rdot"></div>
+      <div><p class="rdate">May 2026</p><p class="rtitle">Open Beta</p><p class="rdesc">Open to everyone. Basic & Advanced plans launch. BYOK enterprise access from May.</p></div>
+    </div>
+    <div class="ri">
+      <div class="rdot"></div>
+      <div><p class="rdate">Q3 2026</p><p class="rtitle">1.0 Release</p><p class="rdesc">Full stable release, team collaboration, enterprise plans, audit logs, SLAs.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA / WAITLIST -->
+<div class="hr"></div>
+<div class="cta" id="waitlist">
+  <div class="cta-glow"></div>
+  <h2 class="reveal">Start building<br><em>with AI.</em></h2>
+  <p class="reveal">Beta opens May 2026. Get notified first.</p>
+  <div class="waitlist reveal">
+    <input class="wi" type="email" placeholder="your@email.com" id="emailInput"/>
+    <button class="btn btn-glow" id="joinBtn">Join Waitlist →</button>
+  </div>
+</div>
+
+</main>
+
+<div class="hr"></div>
+<footer>
+  <div>
+    <div class="fl">Axon™ — 2026</div>
+    <div class="fsub">AI Development Launchpad</div>
+  </div>
+  <div class="flinks">
+    <a href="#">Docs</a>
+    <a href="#">Twitter</a>
+    <a href="#">GitHub</a>
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+  </div>
+</footer>
+
+<script>
+// ── Custom cursor ──────────────────────────────────────────────
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)}
+animRing();
+document.querySelectorAll('a,button,.bento-card,.pcard,.faq-item').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='14px';cur.style.height='14px';ring.style.width='50px';ring.style.height='50px';ring.style.borderColor='rgba(167,139,250,.4)'});
+  el.addEventListener('mouseleave',()=>{cur.style.width='8px';cur.style.height='8px';ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(255,255,255,.25)'});
+});
+
+// ── Canvas particle grid ────────────────────────────────────────
+const canvas=document.getElementById('bg-canvas');
+const ctx=canvas.getContext('2d');
+let W,H,particles=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',()=>{resize();initParticles()});
+class Particle{
+  constructor(){this.reset()}
+  reset(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.r=Math.random()*1.2+.3;this.alpha=Math.random()*.4+.1}
+  update(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset()}
+  draw(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=`rgba(167,139,250,${this.alpha})`;ctx.fill()}
+}
+function initParticles(){particles=[];for(let i=0;i<80;i++)particles.push(new Particle())}
+initParticles();
+function connectParticles(){for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,dist=Math.sqrt(dx*dx+dy*dy);if(dist<120){const a=(1-dist/120)*.08;ctx.strokeStyle=`rgba(167,139,250,${a})`;ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.stroke()}}}
+function loop(){ctx.clearRect(0,0,W,H);particles.forEach(p=>{p.update();p.draw()});connectParticles();requestAnimationFrame(loop)}
+loop();
+
+// ── Bento card mouse glow ───────────────────────────────────────
+document.querySelectorAll('.bento-card,.pcard').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    card.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    card.style.setProperty('--my',(e.clientY-r.top)+'px');
+  });
+});
+
+// ── Scroll reveal ────────────────────────────────────────────────
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('in'),i*60);obs.unobserve(e.target)}});
+},{threshold:.12});
+document.querySelectorAll('.reveal,.reveal-l,.reveal-r').forEach(el=>obs.observe(el));
+
+// ── FAQ reveal ───────────────────────────────────────────────────
+const fObs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*120)}});
+},{threshold:.2});
+document.querySelectorAll('.faq-item').forEach(el=>fObs.observe(el));
+
+// ── Terminal typewriter ──────────────────────────────────────────
+const cmds=[
+  {el:'typed1',text:'axon init my-project',out:'output1',delay:600},
+  {el:'typed2',text:'axon build "add auth with JWT"',out:'output2',delay:2800},
+  {el:'typed3',text:'axon deploy',out:'output3',delay:5800}
+];
+function typeText(id,text,cb){
+  let i=0,el=document.getElementById(id);
+  const iv=setInterval(()=>{el.textContent+=text[i++];if(i>=text.length){clearInterval(iv);if(cb)setTimeout(cb,300)}},55);
+}
+function startTerminal(){
+  cmds.forEach(cmd=>{
+    setTimeout(()=>{
+      typeText(cmd.el,cmd.text,()=>{
+        const out=document.getElementById(cmd.out);
+        if(out)out.style.display='block';
+      });
+    },cmd.delay);
+  });
+}
+const termObs=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting){startTerminal();termObs.disconnect()}
+},{threshold:.3});
+const termEl=document.querySelector('.term-wrap');
+if(termEl)termObs.observe(termEl);
+
+// ── Spot counter animation ───────────────────────────────────────
+const spotsEl=document.getElementById('spots-counter');
+let counted=false;
+const sObs=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting&&!counted){
+    counted=true;let n=200;
+    const iv=setInterval(()=>{n=Math.max(187,n-Math.ceil(Math.random()*3));spotsEl.textContent=n;if(n<=187)clearInterval(iv)},40);
+  }
+},{threshold:.5});
+if(spotsEl)sObs.observe(spotsEl);
+
+// ── Waitlist button ──────────────────────────────────────────────
+document.getElementById('joinBtn').addEventListener('click',function(){
+  const el=document.getElementById('emailInput');
+  if(el.value&&el.value.includes('@')){
+    this.textContent="You're in ✓";
+    this.style.background='linear-gradient(135deg,#4ade80,#22c55e)';
+    this.style.boxShadow='0 0 30px rgba(74,222,128,.4)';
+    this.style.pointerEvents='none';
+    el.style.opacity='.4';
+  }else{
+    el.style.borderColor='rgba(239,68,68,.4)';
+    el.style.boxShadow='0 0 0 3px rgba(239,68,68,.08)';
+    setTimeout(()=>{el.style.borderColor='';el.style.boxShadow=''},1500);
+    el.focus();
+  }
+});
+
+// ── Watermark ────────────────────────────────────────────────────
+const wm=document.getElementById('wm');
+for(let i=0;i<120;i++){const s=document.createElement('span');s.className='wm-text';s.textContent='aiku';wm.appendChild(s)}
+
+// ── Remove cursor blink after typing done ─────────────────────────
+
+setTimeout(()=>{
+  const bc=document.getElementById('term-cursor');
+  if(bc)bc.style.display='none';
+},8000);
+</script>
+</body>
+</html>
